@@ -67,8 +67,9 @@ COOKIES_ENABLED = True  # ========
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'scrapy_email.pipelines.ScrapyEmailPipeline': 300,
+    'scrapy_email.pipelines.ScrapyEmailPGPipeline': 301,
 }  # ========为了启用Item Pipeline组件，必须将它的类添加到 settings.py文件ITEM_PIPELINES 配置:========
+
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html

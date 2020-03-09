@@ -24,7 +24,7 @@ class EmialFiledSpider(scrapy.Spider):
     name = 'EmialFiled'
     allowed_domains = ['mail.263.net']
     start_urls = ['https://mail.263.net']
-    user_email = "******@163.com"
+    user_email = "***@163.com"
     user_email_passwd = "$761;$491;$691;$501;$711;$511;$651;$521;$461;$461;"
     sid = ''  # 获取登录的SID
     page_num = 0  # 获取页面总数
@@ -32,7 +32,6 @@ class EmialFiledSpider(scrapy.Spider):
     indexNum = 0  # 获取邮件当前索引
     return_emial = 0
     Emailmode = EmailMode.FILED  # 邮件查询模式
-    data = []  # 获取爬取到的邮件信息
 
     def start_requests(self):
         # 1.首先进入登录页面
@@ -360,9 +359,15 @@ class EmialFiledSpider(scrapy.Spider):
 
     def parse_get_email_info(self, response):
         # 获取邮件
-        emial_data = []
+
+        _emial_index_Num_mark = 'var indexNum = '
+        _emial_index_Num = response.xpath(
+            '/html/head/script[4]/text()').extract_first()
+        emial_index_Num = _emial_index_Num[_emial_index_Num.find(_emial_index_Num_mark):_emial_index_Num.find(
+            ';', _emial_index_Num.find(_emial_index_Num_mark))].replace(_emial_index_Num_mark, '')  # 邮件缓存中索引
+        emial_index_Num = int(emial_index_Num.replace('"', ''))
         self.return_emial = self.return_emial+1
-        exec_time = str(time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()))
+        exec_time = str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
         print('1.邮件编号{0}, 时间：{1}'.format(self.return_emial, exec_time))
         print('2.邮件的url：%s' % response.url)
         # print('2返回的内容：')
@@ -381,19 +386,10 @@ class EmialFiledSpider(scrapy.Spider):
             '//*[@id="readMailBox"]/div[2]/div[2]/ul/li[1]/div[5]/span[3]/text()').extract_first()
         emial_sender_title = response.xpath(
             '//*[@id="mailTit"]/div[1]/span[2]/text()').extract_first()
-        emial_data.append(emial_name)
-        emial_data.append(emial_address)
-        emial_data.append(emial_from_name)
-        emial_data.append(emial_from)
-        emial_data.append(emial_sender_time)
-        emial_data.append(emial_sender_title)
-        emial_data.append(exec_time)
-        emial_data.append(response.url)
-        self.data.append(emial_data)
 
-        scrapy_emial_item = ScrapyEmailItem(
-            emial_name=emial_name, emial_address=emial_address, emial_from_name=emial_from_name, emial_from=emial_from, emial_sender_time=emial_sender_time,
-            emial_sender_title=emial_sender_title, exec_time=exec_time, response_url=response.url)
+        scrapy_emial_item = ScrapyEmailItem(index_Num=emial_index_Num,
+                                            emial_name=emial_name, emial_address=emial_address, emial_from_name=emial_from_name, emial_from=emial_from, emial_sender_time=emial_sender_time,
+                                            emial_sender_title=emial_sender_title, exec_time=exec_time, response_url=response.url)
         yield scrapy_emial_item  # 将我们需要的数据都解析出来 并交给Pipeline管道处理
 
     def parse_error(self, response):
